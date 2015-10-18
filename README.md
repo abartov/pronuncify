@@ -15,14 +15,16 @@ Currently, the script only handles ingesting word lists and recording batches of
 
 1. To ingest a wordlist, given a UTF-8 plain text file with one word per line (lines beginning with '#' will be ignored), run:
 
-  ruby pronuncify.rb --ingest <fname> --lang <ISO code> --db <database file>
+ ``` ruby pronuncify.rb --ingest <fname> --lang <ISO code> --db <database file>
 
 db defaults to './pronuncify.db'
 Example for a word-list in Hebrew with the default database: ruby pronuncify.rb wordlist.txt he
 
 2. To prepare another batch for recording, run: 
 
-  ruby pronuncify.rb --count NN --lang <ISO code> --outdir <directory>
+  ```
+   ruby pronuncify.rb --count NN --lang <ISO code> --outdir <directory>
+  ```
  
 count defaults to 20
 lang not needed if only one language ingested so far
