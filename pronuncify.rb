@@ -143,7 +143,7 @@ else # make-progress mode
   db.results_as_hash = true
   db.execute("SELECT id, word FROM words WHERE status = ? LIMIT ?", TODO, cfg[:count]) do |row|
     # record a brief audio
-    filename = cfg[:outdir]+'/'+cfg[:lang]+'-'+row['word']
+    filename = cfg[:outdir]+'/'+cfg[:lang]+'-'+row['word'].gsub('"','_').gsub("'",'_')
     puts "\npronounce -=[ #{row['word']} ]=-"
     `arecord -r 100000 -d 4 #{filename}.wav`
     # give user a chance to cancel/skip the word
