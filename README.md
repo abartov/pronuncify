@@ -6,9 +6,9 @@ Currently, the script only handles ingesting word lists and recording batches of
 
 ##Prerequisites
 * Ruby 2.x 
-* the sqlite3 library (apt-get install sqlite3) and gem (gem install sqlite3)
-* alsa-utils (apt-get install alsa-utils)
-* sox (apt-get install sox)
+* the **sqlite3** library (`apt-get install sqlite3`) and gem (`gem install sqlite3`)
+* **alsa-utils** (`apt-get install alsa-utils`)
+* **sox** (`apt-get install sox`)
 * your console needs to be able to render words in the chosen language (fonts matter!)
 
 ##Usage
@@ -21,7 +21,11 @@ Given a UTF-8 plain text file with one word per line (lines beginning with '#' w
  ```
 
 **db** defaults to './pronuncify.db'
-Example for a word-list in Hebrew with the default database: ruby pronuncify.rb wordlist.txt he
+
+Example for a word-list in Hebrew with the default database: 
+```bash
+ruby pronuncify.rb wordlist.txt he
+```
 
 ###To prepare another batch for recording
 Run: 
@@ -42,3 +46,5 @@ to do 20 more words
 
 To report issues or contribute to the code, see http://github.com/abartov/pronuncify
 
+## License
+The code is in the public domain.  See the LICENSE file for details.
