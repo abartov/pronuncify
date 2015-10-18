@@ -40,7 +40,7 @@ Run:
  
 * **count** defaults to 20
 * **lang** not needed if only one language ingested so far
-* **outdir** defaults to './pronounced_words_<ISO code>'
+* **outdir** defaults to './pronounced_words_`ISO`'
  
 so if you're only recording in one language and like the default count and output directory, you can just run: 
 ```bash
