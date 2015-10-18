@@ -1,8 +1,12 @@
 # pronuncify - automate incrementally producing word pronunciation recordings for Wiktionary through Wikimedia Commons
 ##Goal
-Make it easy to quickly record batches of word pronunciations in [Ogg files](https://en.wikipedia.org/wiki/Ogg) suitable for upload to [Wikimedia Commons](https://commons.wikimedia.org) on any modern Linux machine.
+Make it easy to quickly record batches of word pronunciations in [Ogg files](https://en.wikipedia.org/wiki/Ogg) suitable for upload to [Wikimedia Commons](https://commons.wikimedia.org) on any modern Linux machine.  
 
-Currently, the script only handles ingesting word lists and recording batches of word pronunciations.  The resultant Ogg files are just deposited in a specified (or default) directory, and it is up to the user to upload them to Commons appropriately.  In the future, I may implement OAuth-based authentication so that the script would also be able to upload the files on your behalf.
+It does so using the command line, showing the user a word at a time and recording a 4-second file.  The user is then given a 4-second chance to reject it (if they made a mistake in recording, or if the word should not be recorded).  If the user does nothing, the next word is shown and recorded.  At the end of a run, you have `count` new Ogg files ready for upload, and named according to the standard in the [Pronunciation page](https://commons.wikimedia.org/wiki/Category:Pronunciation) on Commons.
+
+A single-file database (using `SQLite`) is used to track which words have been recorded so far.
+
+Currently, the script only handles ingesting word lists and recording batches of word pronunciations.  The resultant Ogg files are just deposited in a specified (or default) directory, and it is up to the user to upload them to Commons appropriately (and to keep track of what's been uploaded already; ideally move it away from the output directory once uploaded).  In the future, I may implement OAuth-based authentication so that the script would also be able to upload the files on your behalf.
 
 ##Prerequisites
 * Ruby 2.x 
