@@ -141,14 +141,15 @@ unless cfg[:list].nil? # ingest mode
 else # make-progress mode
   puts "preparing a batch of #{cfg[:count]} words..."
   db.results_as_hash = true
+  i = 1
   db.execute("SELECT id, word FROM words WHERE status = ? LIMIT ?", TODO, cfg[:count]) do |row|
     # record a brief audio
     filename = cfg[:outdir]+'/'+cfg[:lang]+'-'+row['word'].gsub('"','_').gsub("'",'_')
-    puts "\npronounce -=[ #{row['word']} ]=-"
+    puts "\npronounce -=[ #{row['word']} ]=-   progress: [#{i}/#{cfg[:count]}]"
     `arecord -r 100000 -d 4 #{filename}.wav`
     # give user a chance to cancel/skip the word
     begin
-      puts "press ANY KEY to scrap that word and skip it."
+      puts "...press any key to SCRAP that word and skip it..."
       Timeout.timeout(4) do
         c = STDIN.getch
         # user pressed a key, meaning cancel/skip the recording
@@ -163,6 +164,7 @@ else # make-progress mode
       puts "==> saved! :)"
     end 
     File.delete(filename+'.wav') # delete the recorded WAV file in any case
+    i += 1
   end
 end
 # finalize DB, report results
