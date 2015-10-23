@@ -1,0 +1,9 @@
+{
+    "name" : "pronuncify",
+    "title" : "Pronuncify (Linux / OS X)",
+    "description" : "automate incrementally producing word pronunciation recordings for Wiktionary through Wikimedia Commons",
+    "url" : "https://github.com/abartov/pronuncify",
+    "keywords" : "audio, pronunciation, batch, commons, ogg",
+    "author" : "Asaf Bartov",
+    "repository" : "https://github.com/abartov/pronuncify.git"
+}
