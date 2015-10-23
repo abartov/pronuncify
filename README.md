@@ -50,5 +50,8 @@ to do 20 more words
 
 To report issues or contribute to the code, see http://github.com/abartov/pronuncify
 
+## See also
+* [Pronuncify.net](https://github.com/abartov/pronuncify.net), a Windows GUI version of this tool.
+
 ## License
 The code is in the public domain.  See the LICENSE file for details.
