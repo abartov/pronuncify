@@ -10,18 +10,19 @@ require 'rubygems'
 require 'getoptlong'
 #require 'mediawiki_api' # maybe one day, with OAuth
 require 'sqlite3'
+require 'yaml'
 require 'timeout'
 require 'io/console' # requires Ruby 2.0
 #require 'byebug'
 
-VERSION = "0.1 2015-10-17"
+VERSION = "0.2 2015-10-31"
 TODO = 1
 DONE = 2
 SKIP = 3
 DEFAULT_OUTDIR = './pronounced_words_'
 def usage
   puts <<-EOF
-pronuncify - automate incrementally producing word pronunciation recordings for Wiktionary through Wikimedia Commons - version #{VERSION}
+pronuncify - automate producing word pronunciation recordings for Wiktionary through Wikimedia Commons - v#{VERSION}
 
 Prerequisites:
   - Ruby 2.x 
@@ -39,13 +40,18 @@ Usage:
 
 2. To prepare another batch for recording, run: 
 
- ruby pronuncify.rb --count NN --lang <ISO code> --outdir <directory>
+ ruby pronuncify.rb --count NN --lang <ISO code> --outdir <directory> --frequency <Hz> --device <devicename> --sample <format>
  
- count defaults to 20
+ count defaults to 10
  lang not needed if only one language ingested so far
  outdir defaults to './pronounced_words_<ISO code>'
+ frequency defaults to 48000 Hz
+ device will default to the system default.  If you have a USB microphone, though, you may want something like "--device hw:1,0" (see arecord --list-devices)
+ sample will default to the system default.  If you ahve a USB microphone, you may need something like "--sample S16_LE"
  
  so if you're only recording in one language and like the default count and output directory, you can just run: ruby pronuncify.rb
+
+3. alternatively, pronuncify will read settings from a pronuncify.yml file if it exists.  You can still override specific settings by specifying them on the command line.  To create the file, run pronuncify with the settings you want and add the --write-settings option. 
 
 To report issues or contribute to the code, see http://github.com/abartov/pronuncify
   EOF
@@ -86,7 +92,7 @@ def print_stats(db)
   puts "of #{word_count} known words:\n  #{done_count} are done\n  #{todo_count} are still to-do\n  #{skip_count} were allocated previously but seem to have been skipped."
 end
 # main
-cfg = { :list => nil, :outdir => DEFAULT_OUTDIR, :lang => nil, :db => './pronuncify.db', :count => 20 }
+cfg = { :list => nil, :outdir => DEFAULT_OUTDIR, :lang => nil, :db => './pronuncify.db', :count => 10, :frequency => 48000, :device => nil, :sample => nil  }
 
 opts = GetoptLong.new(
   [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
@@ -95,8 +101,17 @@ opts = GetoptLong.new(
   [ '--db', '-d', GetoptLong::OPTIONAL_ARGUMENT],
   [ '--count', '-c', GetoptLong::OPTIONAL_ARGUMENT],
   [ '--outdir', '-o', GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--frequency', '-f', GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--sample', '-s', GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--device', '-D', GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--write-settings', '-w', GetoptLong::OPTIONAL_ARGUMENT],
 )
+if File.exists?('pronuncify.yml')
+  puts 'reading config from pronuncify.yml'
+  cfg = YAML::load(File.open('pronuncify.yml','r').read) # read cfg from file
+end
 
+write_cfg = false
 opts.each {|opt, arg|
   case opt
     when '--help'
@@ -111,10 +126,20 @@ opts.each {|opt, arg|
       cfg[:count] = arg
     when '--outdir'
       cfg[:outdir] = arg
+    when '--device'
+      cfg[:device] = arg
+    when '--sample'
+      cfg[:sample] = arg
+    when '--frequency'
+      cfg[:frequency] = arga
+    when '--write-settings'
+      write_cfg = true
   end
 }
 usage unless cfg_ok?(cfg) # check args, print usage
-
+if write_cfg
+  File.open('pronuncify.yml','w') {|f| f.write(cfg.to_yaml)}
+end
 db = SQLite3::Database.new cfg[:db]
 unless cfg[:list].nil? # ingest mode
   table_exists = !(db.get_first_row("SELECT * FROM sqlite_master WHERE name = 'words' and type='table';").nil?)
@@ -146,7 +171,10 @@ else # make-progress mode
     # record a brief audio
     filename = cfg[:outdir]+'/'+cfg[:lang]+'-'+row['word'].gsub('"','_').gsub("'",'_')
     puts "\npronounce -=[ #{row['word']} ]=-   progress: [#{i}/#{cfg[:count]}]"
-    `arecord -r 100000 -d 4 #{filename}.wav`
+    extra_args = ''
+    extra_args += "-D #{cfg[:device]} " unless cfg[:device].nil?
+    extra_args += "-f #{cfg[:sample]} " unless cfg[:sample].nil?
+    `arecord -r #{cfg[:frequency]} -d 4 #{extra_args} #{filename}.wav`
     # give user a chance to cancel/skip the word
     begin
       puts "...press any key to SCRAP that word and skip it..."
