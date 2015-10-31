@@ -56,7 +56,8 @@ to do 10 more words
 ###Saved configuration
 Pronuncify will read settings from a `pronuncify.yml` file if it exists.  You can still override specific settings by specifying them on the command line.  To create the file, run pronuncify with the settings you want and add the `--write-settings` option. 
 
-Once you've saved your settings, you can just run ```bash
+Once you've saved your settings, you can just run 
+```bash
 ruby pronuncify.rb
 ```
 to do another batch with your saved settings
