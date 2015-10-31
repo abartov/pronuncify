@@ -28,7 +28,7 @@ Given a UTF-8 plain text file with one word per line (lines beginning with '#' w
 
 Example for a word-list in Hebrew with the default database: 
 ```bash
-ruby pronuncify.rb wordlist.txt he
+ruby pronuncify.rb --ingest wordlist.txt --lang he
 ```
 
 ###To prepare another batch for recording
