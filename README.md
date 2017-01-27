@@ -1,4 +1,6 @@
 # pronuncify - automate incrementally producing word pronunciation recordings for Wiktionary through Wikimedia Commons
+##Version
+Pronuncify is version 0.3, Jan 24th 2017
 ##Goal
 Make it easy to quickly record batches of word pronunciations in [Ogg files](https://en.wikipedia.org/wiki/Ogg) suitable for upload to [Wikimedia Commons](https://commons.wikimedia.org) on any modern Linux machine.  
 
@@ -55,6 +57,12 @@ ruby pronuncify.rb
 ```
 to do 10 more words
 
+###Upload recorded files to Commons
+To upload the recorded words to Commons (moving them from the output directory to an /uploaded subdirectory), run:
+
+  ```bash
+   ruby pronuncify.rb --upload --user <username> --pass <password>
+  ```
 ###Saved configuration
 Pronuncify will read settings from a `pronuncify.yml` file if it exists.  You can still override specific settings by specifying them on the command line.  To create the file, run pronuncify with the settings you want and add the `--write-settings` option. 
 
