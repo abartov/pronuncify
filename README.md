@@ -6,11 +6,15 @@ It does so using the command line, showing the user a word at a time and recordi
 
 A single-file database (using `SQLite`) is used to track which words have been recorded so far.
 
-Currently, the script only handles ingesting word lists and recording batches of word pronunciations.  The resultant Ogg files are just deposited in a specified (or default) directory, and it is up to the user to upload them to Commons appropriately (and to keep track of what's been uploaded already; ideally move it away from the output directory once uploaded).  In the future, I may implement OAuth-based authentication so that the script would also be able to upload the files on your behalf.
+Currently, the script handles ingesting word lists, recording batches of word pronunciations, and uploading them to Wikimedia Commons.  The resultant Ogg files are deposited in a specified (or default) directory, and the user can either upload them to Commons manually, or employ the --upload option to have Pronuncify upload the files on their behalf.  Pronuncify will automatically assign the appropriate category on Commons, based on the language code.  
+
+To upload, Pronuncify needs your Wikimedia username and password.  In the future, I may implement OAuth-based authentication.
 
 ##Prerequisites
 * Ruby 2.x 
 * the **sqlite3** library (`apt-get install sqlite3`) and gem (`gem install sqlite3`)
+* the **mediawiki_api** gem (`gem install mediawiki_api`)
+* the **iso-639** gem (`gem install iso-639`)
 * **alsa-utils** (`apt-get install alsa-utils`)
 * **sox** (`apt-get install sox`)
 * your console needs to be able to render words in the chosen language (fonts matter!)

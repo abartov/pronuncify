@@ -8,14 +8,16 @@
 
 require 'rubygems'
 require 'getoptlong'
-#require 'mediawiki_api' # maybe one day, with OAuth
+require 'mediawiki_api' 
 require 'sqlite3'
+require 'iso-639'
 require 'yaml'
 require 'timeout'
 require 'io/console' # requires Ruby 2.0
+require 'fileutils'
 #require 'byebug'
 
-VERSION = "0.2 2015-10-31"
+VERSION = "0.3 2017-01-24"
 TODO = 1
 DONE = 2
 SKIP = 3
@@ -27,6 +29,8 @@ pronuncify - automate producing word pronunciation recordings for Wiktionary thr
 Prerequisites:
   - Ruby 2.x 
   - the sqlite3 library (apt-get install sqlite3) and gem (gem install sqlite3)
+  - the mediawiki_api gem (gem install mediawiki_api)
+  - the iso-639 gem (gem install iso-639)
   - alsa-utils (apt-get install alsa-utils)
   - sox (apt-get install sox)
 
@@ -53,12 +57,28 @@ Usage:
 
 3. alternatively, pronuncify will read settings from a pronuncify.yml file if it exists.  You can still override specific settings by specifying them on the command line.  To create the file, run pronuncify with the settings you want and add the --write-settings option. 
 
+4. To upload the recorded words to Commons (moving them from the output directory to an /uploaded subdirectory), run:
+
+   ruby pronuncify.rb --upload --user <username> --pass <password>
+
 To report issues or contribute to the code, see http://github.com/abartov/pronuncify
   EOF
   exit
 end
 
-def cfg_ok?(cfg)
+def upload_file(fname, fullpath, client, cfg)
+  begin
+    iso = ISO_639.find(cfg[:lang])
+    catname = iso.english_name
+    client.upload_image fname, fullpath, "Uploaded by [https://github.com/abartov/pronuncify Pronuncify]\n[[Category:#{catname+' pronunciation]]'}", false
+  rescue Exception => e
+    puts "ERROR uploading #{fname}: #{e.message}"
+    return false
+  end
+  return true
+end
+
+def cfg_ok?(cfg,upload_mode)
   db = nil
   ret = true
   begin
@@ -75,6 +95,7 @@ def cfg_ok?(cfg)
       cfg[:outdir] += cfg[:lang] if cfg[:outdir] == DEFAULT_OUTDIR # append language to outdir if not explicitly set
       `mkdir -p #{cfg[:outdir]}` unless Dir.exists?(cfg[:outdir]) # ensure outdir exists
     end
+    raise BadCfg if upload_mode && (cfg[:user].nil? || cfg[:pass].nil?)
   rescue Exception => e
     ret = false
   ensure
@@ -91,57 +112,73 @@ def print_stats(db)
   skip_count = db.execute("SELECT COUNT(id) FROM words WHERE status = ?", SKIP)[0]
   puts "of #{word_count} known words:\n  #{done_count} are done\n  #{todo_count} are still to-do\n  #{skip_count} were allocated previously but seem to have been skipped."
 end
+
+#####################################################
 # main
 cfg = { :list => nil, :outdir => DEFAULT_OUTDIR, :lang => nil, :db => './pronuncify.db', :count => 10, :frequency => 48000, :device => nil, :sample => nil  }
 
-opts = GetoptLong.new(
-  [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
-  [ '--ingest', '-i', GetoptLong::OPTIONAL_ARGUMENT],
-  [ '--lang', '-l', GetoptLong::OPTIONAL_ARGUMENT],
-  [ '--db', '-d', GetoptLong::OPTIONAL_ARGUMENT],
-  [ '--count', '-c', GetoptLong::OPTIONAL_ARGUMENT],
-  [ '--outdir', '-o', GetoptLong::OPTIONAL_ARGUMENT],
-  [ '--frequency', '-f', GetoptLong::OPTIONAL_ARGUMENT],
-  [ '--sample', '-s', GetoptLong::OPTIONAL_ARGUMENT],
-  [ '--device', '-D', GetoptLong::OPTIONAL_ARGUMENT],
-  [ '--write-settings', '-w', GetoptLong::OPTIONAL_ARGUMENT],
-)
-if File.exists?('pronuncify.yml')
-  puts 'reading config from pronuncify.yml'
-  cfg = YAML::load(File.open('pronuncify.yml','r').read) # read cfg from file
-end
-
-write_cfg = false
-opts.each {|opt, arg|
-  case opt
-    when '--help'
-      usage
-    when '--ingest'
-      cfg[:list] = arg
-    when '--lang'
-      cfg[:lang] = arg
-    when '--db'
-      cfg[:db] = arg
-    when '--count'
-      cfg[:count] = arg
-    when '--outdir'
-      cfg[:outdir] = arg
-    when '--device'
-      cfg[:device] = arg
-    when '--sample'
-      cfg[:sample] = arg
-    when '--frequency'
-      cfg[:frequency] = arga
-    when '--write-settings'
-      write_cfg = true
+begin
+  opts = GetoptLong.new(
+    [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
+    [ '--ingest', '-i', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--lang', '-l', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--db', '-d', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--count', '-c', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--outdir', '-o', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--frequency', '-f', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--sample', '-s', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--device', '-D', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--write-settings', '-w', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--user', '-u', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--pass', '-p', GetoptLong::OPTIONAL_ARGUMENT],
+    [ '--upload','-U', GetoptLong::NO_ARGUMENT],
+  )
+  if File.exists?('pronuncify.yml')
+    puts 'reading config from pronuncify.yml'
+    cfg = YAML::load(File.open('pronuncify.yml','r').read) # read cfg from file
   end
-}
-usage unless cfg_ok?(cfg) # check args, print usage
+
+  write_cfg = false
+  upload_mode = false
+  opts.each {|opt, arg|
+    case opt
+      when '--help'
+        usage
+      when '--ingest'
+        cfg[:list] = arg
+      when '--lang'
+        cfg[:lang] = arg
+      when '--db'
+        cfg[:db] = arg
+      when '--count'
+        cfg[:count] = arg
+      when '--outdir'
+        cfg[:outdir] = arg
+      when '--device'
+        cfg[:device] = arg
+      when '--sample'
+        cfg[:sample] = arg
+      when '--frequency'
+        cfg[:frequency] = arg
+      when '--upload'
+        upload_mode = true
+      when '--user'
+        cfg[:user] = arg
+      when '--pass'
+        cfg[:pass] = arg
+      when '--write-settings'
+        write_cfg = true
+    end
+  }
+  usage unless cfg_ok?(cfg, upload_mode) # check args, print usage
+rescue Exception => e
+  usage
+end
 if write_cfg
   File.open('pronuncify.yml','w') {|f| f.write(cfg.to_yaml)}
 end
 db = SQLite3::Database.new cfg[:db]
-unless cfg[:list].nil? # ingest mode
+if not cfg[:list].nil? # ingest mode
   table_exists = !(db.get_first_row("SELECT * FROM sqlite_master WHERE name = 'words' and type='table';").nil?)
   unless table_exists # initialize DB
     db.execute("CREATE TABLE words (id INTEGER PRIMARY KEY ASC, word varchar(255), status integer, lang varchar(10));")
@@ -161,6 +198,25 @@ unless cfg[:list].nil? # ingest mode
       db.execute("INSERT INTO words VALUES (NULL, ?, #{TODO}, '#{cfg[:lang]}')", word) 
     else
       puts "#{word} already in database; skipping."
+    end
+  }
+elsif upload_mode
+  up_path = cfg[:outdir]+'/uploaded'
+  Dir.mkdir(up_path) unless File.exists?(up_path)
+  client = MediawikiApi::Client.new "https://commons.wikimedia.org/w/api.php"
+  begin
+    client.log_in cfg[:user], cfg[:pass]
+  rescue MediawikiApi::LoginError
+    puts "Bad user/password credentials for Wikimedia Commons!"
+    exit
+  end
+  files = Dir[cfg[:outdir]+'/*.ogg']
+  puts "Uploading #{files.length} files..."
+  files.each {|oggpath|
+    oggname = oggpath[oggpath.rindex('/')+1..-1] # just filename portion
+    if upload_file(oggname, oggpath, client, cfg) 
+      FileUtils.mv oggpath, up_path+'/'+oggname
+      puts "Uploaded #{oggname}."
     end
   }
 else # make-progress mode
