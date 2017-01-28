@@ -70,7 +70,7 @@ def upload_file(fname, fullpath, client, cfg)
   begin
     iso = ISO_639.find(cfg[:lang])
     catname = iso.english_name
-    client.upload_image fname, fullpath, "Uploaded by [https://github.com/abartov/pronuncify Pronuncify]\n{{self|CC0}}\n\n[[Category:#{catname+' pronunciation]]'}", false
+    client.upload_image fname, fullpath, "Uploaded by [https://github.com/abartov/pronuncify Pronuncify]\n{{self|CC0}}\n\n[[Category:#{catname}+' pronunciation]]\n[[Category:Files uploaded by Pronuncify]]'}", false
   rescue Exception => e
     puts "ERROR uploading #{fname}: #{e.message}"
     return false
