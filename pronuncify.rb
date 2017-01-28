@@ -17,7 +17,7 @@ require 'io/console' # requires Ruby 2.0
 require 'fileutils'
 #require 'byebug'
 
-VERSION = "0.3 2017-01-24"
+VERSION = "0.31 2017-01-28"
 TODO = 1
 DONE = 2
 SKIP = 3
@@ -70,7 +70,7 @@ def upload_file(fname, fullpath, client, cfg)
   begin
     iso = ISO_639.find(cfg[:lang])
     catname = iso.english_name
-    client.upload_image fname, fullpath, "Uploaded by [https://github.com/abartov/pronuncify Pronuncify]\n[[Category:#{catname+' pronunciation]]'}", false
+    client.upload_image fname, fullpath, "Uploaded by [https://github.com/abartov/pronuncify Pronuncify]\n{{self|CC0}}\n\n[[Category:#{catname+' pronunciation]]'}", false
   rescue Exception => e
     puts "ERROR uploading #{fname}: #{e.message}"
     return false

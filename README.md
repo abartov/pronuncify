@@ -1,6 +1,6 @@
 # pronuncify - automate incrementally producing word pronunciation recordings for Wiktionary through Wikimedia Commons
 ##Version
-Pronuncify is version 0.3, Jan 24th 2017
+Pronuncify is version 0.31, Jan 28th 2017
 ##Goal
 Make it easy to quickly record batches of word pronunciations in [Ogg files](https://en.wikipedia.org/wiki/Ogg) suitable for upload to [Wikimedia Commons](https://commons.wikimedia.org) on any modern Linux machine.  
 
@@ -8,7 +8,7 @@ It does so using the command line, showing the user a word at a time and recordi
 
 A single-file database (using `SQLite`) is used to track which words have been recorded so far.
 
-Currently, the script handles ingesting word lists, recording batches of word pronunciations, and uploading them to Wikimedia Commons.  The resultant Ogg files are deposited in a specified (or default) directory, and the user can either upload them to Commons manually, or employ the --upload option to have Pronuncify upload the files on their behalf.  Pronuncify will automatically assign the appropriate category on Commons, based on the language code.  
+Currently, the script handles ingesting word lists, recording batches of word pronunciations, and uploading them to Wikimedia Commons.  The resultant Ogg files are deposited in a specified (or default) directory, and the user can either upload them to Commons manually, or employ the --upload option to have Pronuncify upload the files on their behalf.  Pronuncify will automatically assign the appropriate category on Commons, based on the language code.  The license will be CC0, to enable maximal re-use of the pronunciation files.
 
 To upload, Pronuncify needs your Wikimedia username and password.  In the future, I may implement OAuth-based authentication.
 
