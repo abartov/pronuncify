@@ -4,11 +4,11 @@
 #
 # developed and maintained by Asaf Bartov <asaf.bartov@gmail.com>
 #
-# tested on Ruby 2.0.  
+# tested on Ruby 2.2.
 
 require 'rubygems'
 require 'getoptlong'
-require 'mediawiki_api' 
+require 'mediawiki_api' # relies on a patch I contributed to the gem, starting version 0.7.1!
 require 'sqlite3'
 require 'iso-639'
 require 'yaml'
@@ -17,7 +17,7 @@ require 'io/console' # requires Ruby 2.0
 require 'fileutils'
 #require 'byebug'
 
-VERSION = "0.31 2017-01-28"
+VERSION = "0.32 2017-02-07"
 TODO = 1
 DONE = 2
 SKIP = 3
@@ -29,7 +29,7 @@ pronuncify - automate producing word pronunciation recordings for Wiktionary thr
 Prerequisites:
   - Ruby 2.x 
   - the sqlite3 library (apt-get install sqlite3) and gem (gem install sqlite3)
-  - the mediawiki_api gem (gem install mediawiki_api)
+  - the mediawiki_api gem (gem install mediawiki_api), v0.7.1 or later
   - the iso-639 gem (gem install iso-639)
   - alsa-utils (apt-get install alsa-utils)
   - sox (apt-get install sox)
@@ -66,11 +66,12 @@ To report issues or contribute to the code, see http://github.com/abartov/pronun
   exit
 end
 
-def upload_file(fname, fullpath, client, cfg)
+def upload_file(fname, fullpath, client, cfg, words, date)
   begin
     iso = ISO_639.find(cfg[:lang])
     catname = iso.english_name
-    client.upload_image fname, fullpath, "Uploaded by [https://github.com/abartov/pronuncify Pronuncify]\n{{self|CC0}}\n\n[[Category:#{catname}+' pronunciation]]\n[[Category:Files uploaded by Pronuncify]]'}", false
+    text = "Uploaded by [https://github.com/abartov/pronuncify Pronuncify]\n=={{int:filedesc}}==\n{{Information\n|description={{en|1=Pronunciation of the #{catname} word(s) #{words}}}\n|date=#{date}\n|source={{own}}\n|author=[[User:#{cfg[:user]}|#{cfg[:user]}]]\n|permission=\n|other versions=\n}}\n\n=={{int:license-header}}==\n{{self|CC0}}\n\n[[Category:#{catname} pronunciation]]\n[[Category:Files uploaded by Pronuncify]]"
+    client.upload_image fname, fullpath, "Uploaded by [https://github.com/abartov/pronuncify Pronuncify]", false, text
   rescue Exception => e
     puts "ERROR uploading #{fname}: #{e.message}"
     return false
@@ -214,7 +215,10 @@ elsif upload_mode
   puts "Uploading #{files.length} files..."
   files.each {|oggpath|
     oggname = oggpath[oggpath.rindex('/')+1..-1] # just filename portion
-    if upload_file(oggname, oggpath, client, cfg) 
+    date = DateTime.parse(File.mtime(oggpath).to_s).to_date.to_s # ridiculous, but I'm lazy
+    oggname =~ /\d+?-(.*)\.ogg/
+    words = $1
+    if upload_file(oggname, oggpath, client, cfg, words, date) 
       FileUtils.mv oggpath, up_path+'/'+oggname
       puts "Uploaded #{oggname}."
     end

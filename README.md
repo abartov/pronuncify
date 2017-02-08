@@ -1,6 +1,6 @@
 # pronuncify - automate incrementally producing word pronunciation recordings for Wiktionary through Wikimedia Commons
 ##Version
-Pronuncify is version 0.31, Jan 28th 2017
+Pronuncify is version 0.32, Feb 7th 2017
 ##Goal
 Make it easy to quickly record batches of word pronunciations in [Ogg files](https://en.wikipedia.org/wiki/Ogg) suitable for upload to [Wikimedia Commons](https://commons.wikimedia.org) on any modern Linux machine.  
 
@@ -15,7 +15,7 @@ To upload, Pronuncify needs your Wikimedia username and password.  In the future
 ##Prerequisites
 * Ruby 2.x 
 * the **sqlite3** library (`apt-get install sqlite3`) and gem (`gem install sqlite3`)
-* the **mediawiki_api** gem (`gem install mediawiki_api`)
+* the **mediawiki_api** gem (`gem install mediawiki_api`) version 0.7.1 or later
 * the **iso-639** gem (`gem install iso-639`)
 * **alsa-utils** (`apt-get install alsa-utils`)
 * **sox** (`apt-get install sox`)
